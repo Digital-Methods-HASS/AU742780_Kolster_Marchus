@@ -1,0 +1,186 @@
+---
+title: "Create Interactive Maps in R"
+author: "Marchus Würtz Kolster"
+date: "2024-04-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+#Assignment starts here
+
+install.packages("leaflet")
+install.packages("htmlwidget")
+
+update.packages(ask = FALSE)
+
+library(leaflet)
+library(htmlwidgets)
+loadedNamespaces()
+
+
+# Task 1: Create a Danish equivalent of AUSmap with esri layers, 
+# but call it DANmap
+
+
+
+########## ADD DATA TO LEAFLET
+
+# Before you can proceed to Task 2, you need to learn about coordinate creation. 
+# In this section you will manually create machine-readable spatial
+# data from GoogleMaps, load these into R, and display them in Leaflet with addMarkers(): 
+
+### First, go to https://bit.ly/CreateCoordinates1
+### Enter the coordinates of your favorite leisure places in Denmark 
+      # extracting them from the URL in googlemaps, adding name and type of monument.
+      # Remember to copy the coordinates as a string, as just two decimal numbers separated by comma. 
+
+# Caveats: Do NOT edit the grey columns! They populate automatically!
+
+### Second, read the sheet into R. You will need gmail login information. 
+  # IMPORTANT: watch the console, it may ask you to authenticate or put in the number 
+  # that corresponds to the account you wish to use.
+
+
+# Libraries
+library(tidyverse)
+library(googlesheets4)
+library(leaflet)
+
+# If you experience difficulty with your read_sheet() function (it is erroring out), 
+# uncomment and run the following function:
+# gs4_deauth()  # run this line and then rerun the read_sheet() function below
+
+gs4_deauth()
+
+# Read in a Google sheet
+places <- read_sheet("https://docs.google.com/spreadsheets/d/1PlxsPElZML8LZKyXbqdAYeQCDIvDps2McZx1cTVWSzI/edit#gid=124710918",col_types = "cccnncnc",range="DM2023")
+
+glimpse(places)
+
+# Question 3: are the Latitude and Longitude columns present? 
+# Do they contain numeric decimal degrees?
+## Yes, they are both present, and do contain numeric deciaml degrees.
+
+
+# If your coordinates look good, see how you can use addMarkers() function to
+# load the coordinates in the map and check: are any points missing? Why?
+
+library(googlesheets4)
+library(leaflet)
+
+DANmap <- leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(lng = places$Longitude, 
+             lat = places$Latitude,
+             popup = paste(places$Description, "<br>", places$Type))
+DANmap
+
+
+## All of the points are vissible on the map.
+
+# Now that you have learned how to load points from a googlesheet to a basic leaflet map, 
+# apply the know-how to YOUR DANmap object. 
+
+######################################## TASK TWO
+
+
+# Task 2: Read in the googlesheet data you and your colleagues created
+# into your DANmap object (with 11 background layers you created in Task 1).
+
+# Solution
+
+library(leaflet)
+
+## I'll start by adding the background layers. 
+DANmap <- leaflet() %>%
+  addProviderTiles("Esri.WorldPhysical") %>%  
+  addProviderTiles("Esri.WorldImagery")
+
+## And then make sure the markers are still visbile on the map.
+DANmap <- DANmap %>%
+  addMarkers(data = places, 
+             lng = ~Longitude, 
+             lat = ~Latitude,
+             popup = ~paste(Description, "<br>", Type))
+
+DANmap
+
+
+######################################## TASK THREE
+
+# Task 3: Can you cluster the points in Leaflet?
+# Hint: Google "clustering options in Leaflet in R"
+
+# Solution
+
+DANmap <- leaflet() %>%
+  addProviderTiles("Esri.WorldPhysical") %>%  
+  addProviderTiles("Esri.WorldImagery") %>%
+  addMarkers(data = places, 
+             clusterOptions = markerClusterOptions())
+DANmap
+
+##Yes, you can!
+
+
+######################################## TASK FOUR
+
+# Task 4: Look at the two maps (with and without clustering) and consider what
+# each is good for and what not.
+
+# Your brief answer
+## The map with clustering is good when you want an overview of a specific area, but does come a bit too short when your looking for a more precise location of the markers. This is where the map with no clustering is good to locate the locations precisely. But when zoomed out the map can appear clumsy and difficult to locate through. 
+
+
+######################################## TASK FIVE
+
+# Task 5: Find out how to display the notes and classifications column in the map. 
+# Hint: Check online help in sites such as 
+# https://r-charts.com/spatial/interactive-maps-leaflet/#popup
+
+# Solution
+
+DANmap <- leaflet() %>%
+  addProviderTiles("Esri.WorldPhysical") %>%  
+  addProviderTiles("Esri.WorldImagery") %>%
+  addMarkers(data = places, 
+             lng = ~Longitude, 
+             lat = ~Latitude,
+             popup = ~paste("Description: ", Description, "<br>",
+                            "Classification: ", Type, "<br>",
+                            "Notes: ", Notes, "<br>"))
+
+DANmap
+
+
+######################################## CONGRATULATIONS - YOUR ARE DONE :)
+
+
+
+
+
+
+
